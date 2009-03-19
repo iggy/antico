@@ -36,6 +36,7 @@ signals:
     void mouse_right_press();
     void mouse_mid_press();
     void mouse_double_click();
+    void mouse_scroll(QWheelEvent *);
 
 protected:
     void mousePressEvent(QMouseEvent *);
@@ -43,6 +44,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *);
     void mouseDoubleClickEvent(QMouseEvent *);
     void paintEvent(QPaintEvent *);
+    void wheelEvent(QWheelEvent*);
 
 private:
     QPixmap active_back;

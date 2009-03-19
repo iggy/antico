@@ -77,6 +77,8 @@ void Frame::init()
     maximized = false;
     state = "NormalState";
     shaped = false;
+    shaded = false;
+    preshadedheight = 0;
 
     XSelectInput(QX11Info::display(), winId(), KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask |
                  KeymapStateMask | ButtonMotionMask | PointerMotionMask | EnterWindowMask | LeaveWindowMask | FocusChangeMask |
@@ -639,6 +641,7 @@ void Frame::create_border()
     connect(tm_bdr, SIGNAL(mouse_left_press(QMouseEvent *)), this, SLOT(press_top_mid(QMouseEvent *)));
     connect(tm_bdr, SIGNAL(mouse_right_press()), this, SLOT(maximize()));
     connect(tm_bdr, SIGNAL(mouse_move(QMouseEvent *)), this, SLOT(move_top_mid(QMouseEvent *)));
+    connect(tm_bdr, SIGNAL(mouse_scroll(QWheelEvent *)), this, SLOT(scroll_top_mid(QWheelEvent *)));
     // bottom left
     connect(bl_bdr, SIGNAL(mouse_left_press(QMouseEvent *)), this, SLOT(press_bottom_left(QMouseEvent *)));
     connect(bl_bdr, SIGNAL(mouse_move(QMouseEvent *)), this, SLOT(move_bottom_left(QMouseEvent *)));
@@ -672,6 +675,18 @@ void Frame::move_top_mid(QMouseEvent *event)
         p.setY(0);
     else
         move(p.x(), p.y());
+}
+
+void Frame::scroll_top_mid(QWheelEvent *event)
+{
+    if(event->delta() > 0)
+    {
+        this->shade();
+    }
+    else if(event->delta() < 0)
+    {
+        this->unshade();
+    }
 }
 
 ////////// BOTTOM LEFT RESIZE //////////////
@@ -819,6 +834,35 @@ void Frame::maximize()
         // set last client dimension
         XResizeWindow(QX11Info::display(), c_win, width()-diff_border_w, height()-diff_border_h);
         maximized = false;
+    }
+}
+
+void Frame::shade()
+{
+    QWidget *child = this->findChild<QWidget *>();
+
+    if(!shaded)
+    {
+        this->setMinimumHeight(1); // override QLayout's default
+        preshadedheight = height();
+
+        child->hide();
+        // FIXME most wm's seem to make it the size of the title and bottom border
+        // but that didn't look right
+        resize(width(), top_bdr_height+4);
+        shaded = true;
+    }
+}
+
+void Frame::unshade()
+{
+    QWidget *child = this->findChild<QWidget *>();
+
+    if(shaded)
+    {
+        resize(width(), preshadedheight);
+        child->show();
+        shaded = false;
     }
 }
 

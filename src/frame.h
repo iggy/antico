@@ -126,6 +126,8 @@ private:
     bool maximized;             // maximize window
     bool splash;                // splash window
     bool shaped;                // nonrectangular window
+    bool shaded;		// whether the window is shaded or not
+    int preshadedheight;	// the height of the window before we shaded it, so we can restore
     QString state;              // window state (Normal, Iconic, Withdrawn)
     bool prot_delete;           // client has delete WM protocol
     bool prot_take_focus;       // client has take focus WM protocol
@@ -153,6 +155,7 @@ private:
 public slots:
     void press_top_mid(QMouseEvent *);          // top mid border press
     void move_top_mid(QMouseEvent *);           // top mid border move
+    void scroll_top_mid(QWheelEvent*);		// top mid scroll wheel
     void press_bottom_left(QMouseEvent *);      // bottom left border press
     void move_bottom_left(QMouseEvent *);       // bottom left border move
     void press_bottom_right(QMouseEvent *);     // bottom right border press
@@ -165,6 +168,8 @@ public slots:
     void move_left(QMouseEvent *);              // left border move
     void destroy();                             // destroy client
     void maximize();                            // maximize client
+    void shade();				// shade client window
+    void unshade();				// unshade client window
     void iconify();                             // iconify client
     void dragEnterEvent(QDragEnterEvent *);
     void dragMoveEvent(QDragMoveEvent *);

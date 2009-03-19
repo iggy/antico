@@ -89,6 +89,10 @@ void Header::mouseMoveEvent(QMouseEvent *event)
         emit mouse_move(event);
     }
 }
+void Header::wheelEvent(QWheelEvent *event)
+{
+    emit mouse_scroll(event);
+}
 
 void Header::mouseReleaseEvent(QMouseEvent *event)
 {
