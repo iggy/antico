@@ -13,12 +13,11 @@ Header::Header(const QPixmap &icn, const QString &nm, QWidget *parent) : QWidget
     setContentsMargins(0, 0, 0, 0);
     icon =  icn;
     app_name = nm;
+    setToolTip(app_name);
 }
 
 Header::~Header()
 {
-    delete &icon;
-    delete &app_name;
 }
 
 void Header::paintEvent(QPaintEvent *)
@@ -29,6 +28,7 @@ void Header::paintEvent(QPaintEvent *)
     painter.drawPixmap(QRect(0, 0, width(), height()), back, QRect(0, 0, back.width(), back.height())); //background
     QString name = QApplication::fontMetrics().elidedText(app_name, Qt::ElideRight, width()-width()/3); // if app_name is too long, add ... at the end
     painter.drawText(QRect(30, 0, width(), height()), Qt::AlignVCenter, name); //app_name
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
     painter.drawPixmap(QRect(5, 2, height()-4, height()-4), icon, QRect(0, 0, icon.width(), icon.height()));//icon
 }
 

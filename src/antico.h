@@ -37,7 +37,7 @@ protected:
 public:
     Antico(int &argc, char **argv);
     ~Antico();
-    void create_frame(Window, Dockbar *);
+    void create_frame(Window, Dockbar *, Desk *);
     void raise_next_frame();
     void set_active_frame(Frame *);
     void send_configurenotify(Frame *);
@@ -66,8 +66,6 @@ private:
     QList<Frame *> frm_list;
     int next_frame;
     QStringList frame_type;
-    QSettings *antico;
-    QSettings *style;
     int servershapes; // server supports shapes
     int ShapeEventBase; // event base for shape extension
     // get WM protocols required by ICCCM
@@ -95,6 +93,7 @@ private:
     Atom _net_wm_window_type_splash;
     Atom _kde_net_wm_system_tray_window_for;
     //////////////
+    QSettings *antico;
     Dockbar *dock;
     Desk *dsk;
     Frame *frm;

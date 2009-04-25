@@ -26,28 +26,21 @@ Deskdev::Deskdev(Filedialog *dial, Categorymenu *menu, const QString &device, co
 
 Deskdev::~Deskdev()
 {
+    delete open_menu;
     delete file_dialog;
     delete cat_menu;
-    delete &device_name;
-    delete &mount_path;
-    delete &device_label;
-    delete &device_type;
-    delete &d_disk_pix;
-    delete &d_cdrom_pix;
-    delete &open_with_pix;
-    delete &d_dev_col;
 }
 
 void Deskdev::read_settings()
 {
     // get style path
-    antico = new QSettings(QCoreApplication::applicationDirPath() + "/antico.cfg", QSettings::IniFormat, this);
+    QSettings *antico = new QSettings(QCoreApplication::applicationDirPath() + "/antico.cfg", QSettings::IniFormat, this);
     antico->beginGroup("Style");
     QString stl_name = antico->value("name").toString();
     QString stl_path = antico->value("path").toString();
     antico->endGroup(); //Style
     // get style values
-    style = new QSettings(stl_path + stl_name, QSettings::IniFormat, this);
+    QSettings *style = new QSettings(stl_path + stl_name, QSettings::IniFormat, this);
     style->beginGroup("Deskdev");
     d_disk_pix = stl_path + style->value("d_disk_pix").toString();
     d_cdrom_pix = stl_path + style->value("d_cdrom_pix").toString();
@@ -83,6 +76,17 @@ void Deskdev::paintEvent(QPaintEvent *)
     painter.setWindow(-50, -50, 100, 50);
     painter.setPen(d_dev_col);
 
+    QString name = QApplication::fontMetrics().elidedText(device_name, Qt::ElideRight, 90); // if device_name is too long, add ... at the end
+
+    painter.setOpacity(0.5);
+    painter.setPen(Qt::black);
+    painter.drawText(-49, -14, 100, 20, Qt::AlignHCenter, name); // shadow deskdev name
+    painter.setOpacity(1);
+    painter.setPen(d_dev_col);
+    painter.drawText(-50, -15, 100, 20, Qt::AlignHCenter, name); // deskdev name
+    
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
+    
     if (zoom)
     {
         painter.drawPixmap(QRect(-18, -50, 36, 36), dev_pix, QRect(0, 0, dev_pix.width(), dev_pix.height()));// deskdev pix
@@ -91,15 +95,6 @@ void Deskdev::paintEvent(QPaintEvent *)
     {
         painter.drawPixmap(QRect(-16, -50, 32, 32), dev_pix, QRect(0, 0, dev_pix.width(), dev_pix.height()));// deskdev pix
     }
-
-    QString name = QApplication::fontMetrics().elidedText(device_name, Qt::ElideRight, 90); // if device_name is too long, add ... at the end
-
-    painter.setOpacity(0.5);
-    painter.setPen(Qt::black);
-    painter.drawText(-48, -13, 100, 20, Qt::AlignHCenter, name); // shadow deskdev name
-    painter.setOpacity(1);
-    painter.setPen(d_dev_col);
-    painter.drawText(-50, -15, 100, 20, Qt::AlignHCenter, name); // deskdev name
 }
 
 void Deskdev::mousePressEvent(QMouseEvent *event)

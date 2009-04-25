@@ -86,20 +86,14 @@ Categorymenu::Categorymenu(QWidget *parent) : QWidget(parent)
 
 Categorymenu::~Categorymenu()
 {
-    delete &audiovideo_menu;
-    delete &system_menu;
-    delete &development_menu;
-    delete &graphics_menu;
-    delete &network_menu;
-    delete &office_menu;
-    delete &utility_menu;
-    delete &utility_pix;
-    delete &office_pix;
-    delete &network_pix;
-    delete &graphics_pix;
-    delete &devel_pix;
-    delete &system_pix;
-    delete &audiovideo_pix;
+    delete antico;
+    delete audiovideo_menu;
+    delete system_menu;
+    delete development_menu;
+    delete graphics_menu;
+    delete network_menu;
+    delete office_menu;
+    delete utility_menu;
 }
 
 void Categorymenu::init()
@@ -137,7 +131,7 @@ void Categorymenu::read_settings()
     QString stl_path = antico->value("path").toString();
     antico->endGroup(); //Style
     // get category menu icons
-    style = new QSettings(stl_path + stl_name, QSettings::IniFormat, this);
+    QSettings *style = new QSettings(stl_path + stl_name, QSettings::IniFormat, this);
     style->beginGroup("Launcher");
     utility_pix = stl_path + style->value("utility_pix").toString();
     office_pix = stl_path + style->value("office_pix").toString();
@@ -248,13 +242,18 @@ void Categorymenu::run_menu(QAction *act)
     else
         QProcess::startDetached(cmd, cmd_arguments); //start Application + arguments from Category menu
 
-    cmd_arguments.clear();
+    clear_cmd_arguments();
 }
 
 void Categorymenu::set_cmd_arguments(const QString &arg) // add arguments after application name on run
 {
     qDebug() << "Command arguments on run:" << arg;
     cmd_arguments << arg;
+}
+
+void Categorymenu::clear_cmd_arguments()
+{
+   cmd_arguments.clear();
 }
 
 void Categorymenu::update_style()
@@ -433,17 +432,32 @@ Fileicon::Fileicon() : QFileIconProvider()
 
 Fileicon::~Fileicon()
 {
-    delete &utility_pix;
-    delete &office_pix;
-    delete &network_pix;
-    delete &graphics_pix;
-    delete &devel_pix;
-    delete &system_pix;
-    delete &audiovideo_pix;
-    delete &d_folder_pix;
-    delete &application_pix;
-    delete antico;
-    delete style;
+}
+
+void Fileicon::read_settings()
+{
+    QSettings *antico = new QSettings(QCoreApplication::applicationDirPath() + "/antico.cfg", QSettings::IniFormat);
+    antico->beginGroup("Style");
+    QString stl_name = antico->value("name").toString();
+    QString stl_path = antico->value("path").toString();
+    antico->endGroup(); //Style
+    // get category menu icons
+    QSettings *style = new QSettings(stl_path + stl_name, QSettings::IniFormat);
+    style->beginGroup("Launcher");
+    utility_pix = stl_path + style->value("utility_pix").toString();
+    office_pix = stl_path + style->value("office_pix").toString();
+    network_pix = stl_path + style->value("network_pix").toString();
+    graphics_pix = stl_path + style->value("graphics_pix").toString();
+    devel_pix = stl_path + style->value("development_pix").toString();
+    system_pix = stl_path + style->value("system_pix").toString();
+    audiovideo_pix = stl_path + style->value("audiovideo_pix").toString();
+    style->endGroup(); // Launcher
+    style->beginGroup("Deskfolder");
+    d_folder_pix = stl_path + style->value("d_folder_pix").toString();
+    style->endGroup(); // Deskfolder
+    style->beginGroup("Other");
+    application_pix = stl_path + style->value("application_pix").toString();
+    style->endGroup(); // Other
 }
 
 QIcon Fileicon::icon(const QFileInfo &info) const
@@ -533,28 +547,3 @@ QString Fileicon::icon_type(const QFileInfo &info) const
     return system_pix; // default pix
 }
 
-void Fileicon::read_settings()
-{
-    antico = new QSettings(QCoreApplication::applicationDirPath() + "/antico.cfg", QSettings::IniFormat);
-    antico->beginGroup("Style");
-    QString stl_name = antico->value("name").toString();
-    QString stl_path = antico->value("path").toString();
-    antico->endGroup(); //Style
-    // get category menu icons
-    style = new QSettings(stl_path + stl_name, QSettings::IniFormat);
-    style->beginGroup("Launcher");
-    utility_pix = stl_path + style->value("utility_pix").toString();
-    office_pix = stl_path + style->value("office_pix").toString();
-    network_pix = stl_path + style->value("network_pix").toString();
-    graphics_pix = stl_path + style->value("graphics_pix").toString();
-    devel_pix = stl_path + style->value("development_pix").toString();
-    system_pix = stl_path + style->value("system_pix").toString();
-    audiovideo_pix = stl_path + style->value("audiovideo_pix").toString();
-    style->endGroup(); // Launcher
-    style->beginGroup("Deskfolder");
-    d_folder_pix = stl_path + style->value("d_folder_pix").toString();
-    style->endGroup(); // Deskfolder
-    style->beginGroup("Other");
-    application_pix = stl_path + style->value("application_pix").toString();
-    style->endGroup(); // Other
-}

@@ -23,11 +23,8 @@ Deskapp::Deskapp(const QString &app_nm, const QString &app_exe, const QString &a
 
 Deskapp::~Deskapp()
 {
-    delete &app_name;
-    delete &app_exec;
-    delete &d_app_pix;
-    delete &d_app_col;
-    delete &delete_link_pix;
+    delete antico;
+    delete menu;
 }
 
 void Deskapp::read_settings()
@@ -39,7 +36,7 @@ void Deskapp::read_settings()
     QString stl_path = antico->value("path").toString();
     antico->endGroup(); //Style
     // get style values
-    style = new QSettings(stl_path + stl_name, QSettings::IniFormat,this);
+    QSettings *style = new QSettings(stl_path + stl_name, QSettings::IniFormat,this);
     style->beginGroup("Deskapp");
     d_app_col = style->value("name_color").value<QColor>();
     style->endGroup(); //Deskapp
@@ -54,15 +51,7 @@ void Deskapp::paintEvent(QPaintEvent *)
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setWindow(-50, -50, 100, 50);
     painter.setPen(d_app_col);
-         
-    if (zoom)
-    {
-        painter.drawPixmap(QRect(-18, -50, 36, 36), d_app_pix, QRect(0, 0, d_app_pix.width(), d_app_pix.height()));// deskapp pix
-    }
-    else
-    {
-        painter.drawPixmap(QRect(-16, -50, 32, 32), d_app_pix, QRect(0, 0, d_app_pix.width(), d_app_pix.height()));// deskapp pix
-    }
+   
     if (selected)
     {
         painter.drawRoundedRect(-50, -50, width(), height(), 5, 5);
@@ -72,10 +61,21 @@ void Deskapp::paintEvent(QPaintEvent *)
    
     painter.setOpacity(0.5);
     painter.setPen(Qt::black);
-    painter.drawText(-48, -13, 100, 20, Qt::AlignHCenter, name); // shadow deskapp name
+    painter.drawText(-49, -14, 100, 20, Qt::AlignHCenter, name); // shadow deskapp name
     painter.setOpacity(1);
     painter.setPen(d_app_col);
     painter.drawText(-50, -15, 100, 20, Qt::AlignHCenter, name); // deskapp name
+    
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
+          
+    if (zoom)
+    {
+        painter.drawPixmap(QRect(-18, -50, 36, 36), d_app_pix, QRect(0, 0, d_app_pix.width(), d_app_pix.height()));// deskapp pix
+    }
+    else
+    {
+        painter.drawPixmap(QRect(-16, -50, 32, 32), d_app_pix, QRect(0, 0, d_app_pix.width(), d_app_pix.height()));// deskapp pix
+    }
 }
 
 void Deskapp::set_selected(bool select)

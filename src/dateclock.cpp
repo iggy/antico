@@ -18,10 +18,6 @@ Dateclock::Dateclock(QWidget *parent) : QLabel(parent)
 
 Dateclock::~Dateclock()
 {
-    delete &time;
-    delete &date;
-    delete &date_col;
-    delete &clock_col;
 }
 
 void Dateclock::read_settings()
@@ -33,7 +29,7 @@ void Dateclock::read_settings()
     QString stl_path = antico->value("path").toString();
     antico->endGroup(); //Style
     // get style values
-    style = new QSettings(stl_path +stl_name, QSettings::IniFormat, this);
+    QSettings *style = new QSettings(stl_path +stl_name, QSettings::IniFormat, this);
     style->beginGroup("Dateclock");
     date_col = style->value("date_color").value<QColor>();
     clock_col = style->value("clock_color").value<QColor>();

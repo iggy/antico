@@ -46,12 +46,11 @@ private:
     QString trash_pix;
     QColor trash_col;
     QPixmap pix;
-    QSettings *style;
-    QSettings *antico;
     bool zoom;
     QPoint mousepos;
     QString stl_path;
     QString stl_name;
+    QSettings *antico;
     Trashdialog *trash_dlg;
 };
 

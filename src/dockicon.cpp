@@ -1,7 +1,7 @@
 ////////////////////////////////////////
-//  File      : dockicon.cpp          //
-//  Written by: g_cigala@virgilio.it  //
-//  Copyright : GPL                   //
+// File : dockicon.cpp                //
+// Written by: g_cigala@virgilio.it   //
+// Copyright : GPL                    //
 ////////////////////////////////////////
 
 #include "dockicon.h"
@@ -14,33 +14,30 @@ Dockicon::Dockicon(Frame *frame, Systray *sys_tr, QWidget *parent) : QWidget(par
     title = frm->cl_name();
     sys = sys_tr;
     read_settings();
-    iconize = false;
     bdr_width = 1;
+    setAttribute(Qt::WA_AlwaysShowToolTips);
+    setToolTip(title);
+    frame_state = 1; // 1 = raised, 0 = unmapped;
 }
 
 Dockicon::~Dockicon()
 {
     delete frm;
     delete sys;
-    delete &pix;
-    delete &d_icon_pix;
-    delete &title_color;
-    delete &close_dock_pix;
-    delete &add_to_sys_pix;
 }
 
 void Dockicon::read_settings()
 {
     // get style path
-    antico = new QSettings(QCoreApplication::applicationDirPath() + "/antico.cfg", QSettings::IniFormat, this);
+    QSettings *antico = new QSettings(QCoreApplication::applicationDirPath() + "/antico.cfg", QSettings::IniFormat, this);
     antico->beginGroup("Style");
     QString stl_name = antico->value("name").toString();
     QString stl_path = antico->value("path").toString();
     antico->endGroup(); //Style
     // get style values
-    style = new QSettings(stl_path + stl_name, QSettings::IniFormat, this);
+    QSettings *style = new QSettings(stl_path + stl_name, QSettings::IniFormat, this);
     style->beginGroup("Dockicon");
-    d_icon_pix = stl_path + style->value("d_icon_pix").toString();
+    QString d_icon_pix = stl_path + style->value("d_icon_pix").toString();
     title_color = style->value("title_color").value<QColor>();
     style->endGroup(); //Dockicon
     style->beginGroup("Other");
@@ -59,38 +56,27 @@ void Dockicon::paintEvent(QPaintEvent *)
     QString name = QApplication::fontMetrics().elidedText(title, Qt::ElideRight, width()-width()/3); // if dock title is too long, add ... at the end
     painter.drawText(QRect(height()+3, 0, width(), height()), Qt::AlignVCenter, name); // dock title
     painter.drawPixmap(QRect(0, 0, width(), height()), pix, QRect(0, 0, pix.width(), pix.height()));// dock pixmap
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
     painter.drawPixmap(QRect(3, 3, height()-6, height()-6), frm->cl_icon(), QRect(0, 0, frm->cl_icon().width(), frm->cl_icon().height()));// dock icon
-}
-
-void Dockicon::set_state(QString state)
-{
-    if (state == "Normal")
-    {
-        iconize = false;
-        qDebug() << "Dockicon (change state):" << frm->cl_win() << "- Name:" << frm->cl_name() << "- Iconize:" << iconize;
-    }
-    if (state == "Iconize")
-    {
-        iconize = true;
-        qDebug() << "Dockicon (change state):" << frm->cl_win() << "- Name:" << frm->cl_name() << "- Iconize:" << iconize;
-    }
 }
 
 void Dockicon::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton)
     {
-        if (iconize)
+        if (frame_state == 0)
         {
+            frame_state = 1;
             frm->raise();
-            iconize = false;
-            qDebug() << "Dockicon (mouse press):" << frm->cl_win() << "- Name:" << frm->cl_name() << "- Iconize:" << iconize;
+            qDebug() << "Dockicon (mouse press):" << frm->cl_win() << "- Name:" << frm->cl_name() << "- State: raised";
+            return;
         }
-        else
+        if (frame_state == 1)
         {
-            frm->iconify();
-            iconize = true;
-            qDebug() << "Dockicon (mouse press):" << frm->cl_win() << "- Name:" << frm->cl_name() << "- Iconize:" << iconize;
+            frame_state = 0;
+            frm->unmap();
+            qDebug() << "Dockicon (mouse press):" << frm->cl_win() << "- Name:" << frm->cl_name() << "- State: unmapped";
+            return;
         }
     }
     if (event->button() == Qt::RightButton)
@@ -127,7 +113,7 @@ void Dockicon::run_menu(QAction *act)
     }
     if (act->text() == tr("Add to System Tray"))
     {
-        sys->add(frm); // add Dockicon to System Tray
+        sys->add_sysicon(frm); // add Dockicon to System Tray
         qDebug() << "Dockicon add to System Tray";
         emit destroy_dockicon(this);
         frm->unmap();

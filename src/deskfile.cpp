@@ -21,14 +21,10 @@ Deskfile::Deskfile(Categorymenu *menu, const QString &file_nm, const QString &fi
 
 Deskfile::~Deskfile()
 {
-    delete cat_menu;
     delete open_menu;
-    delete &file_name;
-    delete &file_path;
-    delete &d_file_pix;
-    delete &d_file_col;
-    delete &delete_link_pix;
-    delete &open_with_pix;
+    delete antico;
+    delete delete_file;
+    delete cat_menu;
 }
 
 void Deskfile::init()
@@ -60,7 +56,7 @@ void Deskfile::read_settings()
     QString stl_path = antico->value("path").toString();
     antico->endGroup(); //Style
     // get style values
-    style = new QSettings(stl_path + stl_name, QSettings::IniFormat, this);
+    QSettings *style = new QSettings(stl_path + stl_name, QSettings::IniFormat, this);
     style->beginGroup("Deskfile");
     d_file_col = style->value("name_color").value<QColor>();
     style->endGroup(); //Deskfile
@@ -76,15 +72,7 @@ void Deskfile::paintEvent(QPaintEvent *)
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setWindow(-50, -50, 100, 50);
     painter.setPen(d_file_col);
-
-    if (zoom)
-    {
-        painter.drawPixmap(QRect(-18, -50, 36, 36), d_file_pix, QRect(0, 0, d_file_pix.width(), d_file_pix.height()));// deskfile pix
-    }
-    else
-    {
-        painter.drawPixmap(QRect(-16, -50, 32, 32), d_file_pix, QRect(0, 0, d_file_pix.width(), d_file_pix.height()));// deskfile pix
-    }
+    
     if (selected)
     {
         painter.drawRoundedRect(-50, -50, width(), height(), 5, 5);
@@ -94,10 +82,21 @@ void Deskfile::paintEvent(QPaintEvent *)
 
     painter.setOpacity(0.5);
     painter.setPen(Qt::black);
-    painter.drawText(-48, -13, 100, 20, Qt::AlignHCenter, name); // shadow deskfile name
+    painter.drawText(-49, -14, 100, 20, Qt::AlignHCenter, name); // shadow deskfile name
     painter.setOpacity(1);
     painter.setPen(d_file_col);
     painter.drawText(-50, -15, 100, 20, Qt::AlignHCenter, name); // deskfile name
+    
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
+    
+    if (zoom)
+    {
+        painter.drawPixmap(QRect(-18, -50, 36, 36), d_file_pix, QRect(0, 0, d_file_pix.width(), d_file_pix.height()));// deskfile pix
+    }
+    else
+    {
+        painter.drawPixmap(QRect(-16, -50, 32, 32), d_file_pix, QRect(0, 0, d_file_pix.width(), d_file_pix.height()));// deskfile pix
+    }
 }
 
 void Deskfile::set_selected(bool select)

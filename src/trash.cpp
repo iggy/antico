@@ -16,14 +16,16 @@ Trash::Trash(QWidget *parent) : QWidget(parent)
 }
 
 Trash::~Trash()
-{}
+{
+    delete antico;
+}
 
 void Trash::init()
 {
     setFixedSize(100, 50);
     pix = QPixmap(trash_pix); // set default pixmap
     zoom = false;
-    trash_dlg = new Trashdialog(); // create the Trashdialog
+    trash_dlg = new Trashdialog(this); // create the Trashdialog
 }
 
 void Trash::read_settings()
@@ -35,7 +37,7 @@ void Trash::read_settings()
     stl_path = antico->value("path").toString();
     antico->endGroup(); //Style
     // get style values
-    style = new QSettings(stl_path + stl_name, QSettings::IniFormat, this);
+    QSettings *style = new QSettings(stl_path + stl_name, QSettings::IniFormat, this);
     style->beginGroup("Trash");
     trash_pix = stl_path + style->value("trash_pix").toString();
     trash_col = style->value("name_color").value<QColor>();
@@ -47,6 +49,15 @@ void Trash::paintEvent(QPaintEvent *)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setWindow(-50, -50, 100, 50);
+    painter.setOpacity(0.5);
+    painter.setPen(Qt::black);
+    painter.drawText(-49, -14, 100, 20, Qt::AlignHCenter, tr("Trash")); // shadow Trash name
+    painter.setOpacity(1);
+    painter.setPen(trash_col);
+    painter.drawText(-50, -15, 100, 20, Qt::AlignHCenter, tr("Trash")); // Trash name
+    
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
+    
     if (zoom)
     {
         painter.drawPixmap(QRect(-18, -50, 36, 36), pix, QRect(0, 0, pix.width(), pix.height()));// Trash pix
@@ -55,13 +66,6 @@ void Trash::paintEvent(QPaintEvent *)
     {
         painter.drawPixmap(QRect(-16, -50, 32, 32), pix, QRect(0, 0, pix.width(), pix.height()));// Trash pix
     }
-
-    painter.setOpacity(0.5);
-    painter.setPen(Qt::black);
-    painter.drawText(-48, -13, 100, 20, Qt::AlignHCenter, tr("Trash")); // shadow Trash name
-    painter.setOpacity(1);
-    painter.setPen(trash_col);
-    painter.drawText(-50, -15, 100, 20, Qt::AlignHCenter, tr("Trash")); // Trash name
 }
 
 void Trash::mousePressEvent(QMouseEvent *event)

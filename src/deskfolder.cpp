@@ -22,17 +22,11 @@ Deskfolder::Deskfolder(Filedialog *dial, Categorymenu *menu, const QString &dir_
 
 Deskfolder::~Deskfolder()
 {
+    delete antico;
+    delete delete_folder;
+    delete open_menu;
     delete file_dialog;
     delete cat_menu;
-    delete &open_menu;
-    delete &dir_name;
-    delete &dir_path;
-    delete &geom;
-    delete &d_folder_pix;
-    delete &d_folder_col;
-    delete &delete_link_pix;
-    delete &open_with_pix;
-    delete &pix;
 }
 
 void Deskfolder::init()
@@ -65,7 +59,7 @@ void Deskfolder::read_settings()
     QString stl_path = antico->value("path").toString();
     antico->endGroup(); //Style
     // get style values
-    style = new QSettings(stl_path + stl_name, QSettings::IniFormat, this);
+    QSettings *style = new QSettings(stl_path + stl_name, QSettings::IniFormat, this);
     style->beginGroup("Deskfolder");
     d_folder_pix = stl_path + style->value("d_folder_pix").toString();
     d_folder_col = style->value("name_color").value<QColor>();
@@ -83,6 +77,22 @@ void Deskfolder::paintEvent(QPaintEvent *)
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setWindow(-50, -50, 100, 50);
     painter.setPen(d_folder_col);
+        
+    if (selected)
+    {
+        painter.drawRoundedRect(-50, -50, width(), height(), 5, 5);
+    }
+    
+    QString name = QApplication::fontMetrics().elidedText(dir_name, Qt::ElideRight, 90); // if dir_name is too long, add ... at the end
+
+    painter.setOpacity(0.5);
+    painter.setPen(Qt::black);
+    painter.drawText(-49, -14, 100, 20, Qt::AlignHCenter, name); // shadow deskfolder name
+    painter.setOpacity(1);
+    painter.setPen(d_folder_col);
+    painter.drawText(-50, -15, 100, 20, Qt::AlignHCenter, name); // deskfolder name
+    
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
       
     if (zoom)
     {
@@ -92,18 +102,6 @@ void Deskfolder::paintEvent(QPaintEvent *)
     {
         painter.drawPixmap(QRect(-16, -50, 32, 32), pix, QRect(0, 0, pix.width(), pix.height()));// deskfolder pix
     }
-    if (selected)
-    {
-        painter.drawRoundedRect(-50, -50, width(), height(), 5, 5);
-    }
-    QString name = QApplication::fontMetrics().elidedText(dir_name, Qt::ElideRight, 90); // if dir_name is too long, add ... at the end
-
-    painter.setOpacity(0.5);
-    painter.setPen(Qt::black);
-    painter.drawText(-48, -13, 100, 20, Qt::AlignHCenter, name); // shadow deskfolder name
-    painter.setOpacity(1);
-    painter.setPen(d_folder_col);
-    painter.drawText(-50, -15, 100, 20, Qt::AlignHCenter, name); // deskfolder name
 }
 
 void Deskfolder::set_selected(bool select)
@@ -160,7 +158,7 @@ void Deskfolder::mouseDoubleClickEvent(QMouseEvent *event)
             param << path;
             QProcess::startDetached(exec, param); //open the file with the preferred application
         }
-        else
+        else // open with Filedialog
         {
             file_dialog->set_type(tr("Folder contents:"), "Close");
             file_dialog->setGeometry(geom);

@@ -20,10 +20,7 @@ Sysicon::Sysicon(Frame *frame, QWidget *parent) : QWidget(parent)
 
 Sysicon::~Sysicon()
 {
-    delete &pix;
-    delete &s_icon_pix;
-    delete &close_dock_pix;
-    delete &title_color;
+    delete frm;
 }
 
 void Sysicon::read_settings()
@@ -35,7 +32,7 @@ void Sysicon::read_settings()
     QString stl_path = antico->value("path").toString();
     antico->endGroup(); //Style
     // get style values
-    style = new QSettings(stl_path +stl_name, QSettings::IniFormat, this);
+    QSettings *style = new QSettings(stl_path +stl_name, QSettings::IniFormat, this);
     style->beginGroup("Sysicon");
     s_icon_pix = stl_path + style->value("s_icon_pix").toString();
     pix = QPixmap(s_icon_pix);
@@ -55,6 +52,7 @@ void Sysicon::paintEvent(QPaintEvent *)
     painter.setPen(QPen(title_color, bdr_width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     painter.drawRoundedRect(0, 0, width(), height(), 5, 5);
     painter.drawPixmap(QRect(0, 0, width(), height()), pix, QRect(0, 0, pix.width(), pix.height()));// sysicon pixmap
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
     painter.drawPixmap(QRect(3, 3, height()-6, height()-6), frm->cl_icon(), QRect(0, 0, frm->cl_icon().width(), frm->cl_icon().height()));// sysicon
 }
 

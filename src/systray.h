@@ -26,22 +26,19 @@ class Systray : public QLabel
 public:
     Systray(QWidget *parent=0);
     ~Systray();
-    void add(Frame *);
-    void add(Window);
-    void remove(Window);
+    void add_sysicon(Frame *);
+    void add_embed(Window);
+    void remove_sysicon(Window);
     void update_style();
  
 public slots:
-    void remove(Sysicon *);
+    void remove_sysicon(Sysicon *);
     
 protected:
     virtual bool x11Event (XEvent *);
     
 private:
-    QHBoxLayout *layout;
-    QHash<int, Sysicon *> sys_icons; // mapping frame id with Sysicon (key=frame_win_id value=Sysicon)
-    Sysicon *s_icon;
-    QX11EmbedContainer *emb_cont;
+    QHash<int, Sysicon *> sys_icons; // mapping frame id with Sysicon (key=frame_win_id, value=Sysicon)
     QString sys_pix;
     // System tray properties
     Atom kde_systray_prop;
@@ -49,6 +46,9 @@ private:
     Atom net_selection_atom;
     Atom net_manager_atom;
     Atom net_message_data_atom;
+    QHBoxLayout *layout;
+    Sysicon *s_icon;
+    QX11EmbedContainer *emb_cont;
 };
 
 #endif

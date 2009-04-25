@@ -1,6 +1,6 @@
 Antico is a Qt4/X11 Desktop/Window Manager.
 The goal is to create a Window/Desktop manager simple and fast. All parameters must be configured from few files, avoiding unnecessary complications, following the K.I.S.S. philosophy.
-The whole project should be based only on Qt4 libraries, without any other external dependencies (e.g. kdelibs ...). 
+The whole project is be based only on Qt4 libraries, without any other external dependencies (e.g. kdelibs ...). 
 
 ***********
 FEATURES
@@ -54,9 +54,9 @@ DEVELOPMENT
 To test the window manager, type on shell:
 
 DISPLAY=:0
-Xephyr :1 -ac -screen 1000x800 & DISPLAY=:1; $HOME/antico/antico
+Xephyr :1 -ac -screen 1024x768 & DISPLAY=:1; $HOME/antico/antico
 
-(where 1000x800 is your preferred screen size and $HOME if you have download Antico in user home)
+(where 1024x768 is your preferred screen size and $HOME if you have download Antico in user home)
 ---------------------------------------------------
 To hide debug messages, uncomment in antico.pro
 //DEFINES = QT_NO_DEBUG_OUTPUT
@@ -86,6 +86,7 @@ THANKS
 ***********
 - Alexander Linden for QLWM (http://qlwm.get.to) from where I was inspired... and for his help;
 - Ian Reinhart Geiser for his helpful patch;
+- Franz Fellner for his code debug;
 - Ayoy for Polish translation;
 - Disels for Russian translation;
 - Jiri Popek for Czech translation;

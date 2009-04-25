@@ -17,30 +17,17 @@ Desk::Desk(Antico *a, QWidget *parent) : QLabel(parent)
     set_geometry();
     set_desk_icons(); // at startup, restore deskfolder/deskfile/deskapp on desktop
     setAcceptDrops(true); // for drag and drop from Filedialog
+    setAttribute(Qt::WA_AlwaysShowToolTips);
     init();
     show();
 }
 
 Desk::~Desk()
 {
+    delete antico;
     delete app;
     delete file_dialog;
     delete cat_menu;
-    delete d_folder;
-    delete d_file;
-    delete d_app;
-    delete &dock_height;
-    delete &wall_pix;
-    delete &file_link_pix;
-    delete &folder_link_pix;
-    delete &app_link_pix;
-    delete &desk_folders;
-    delete &desk_folders_selected;
-    delete &desk_files;
-    delete &desk_files_selected;
-    delete &desk_apps;
-    delete &desk_apps_selected;
-    delete &desk_dev;
 }
 
 void Desk::read_settings()
@@ -52,7 +39,7 @@ void Desk::read_settings()
     QString stl_path = antico->value("path").toString();
     antico->endGroup(); //Style
     // get style values
-    style = new QSettings(stl_path + stl_name, QSettings::IniFormat,this);
+    QSettings *style = new QSettings(stl_path + stl_name, QSettings::IniFormat,this);
     style->beginGroup("Desktop");
     wall_pix = stl_path + style->value("wall_pix").toString();
     style->endGroup(); //Desktop
@@ -482,6 +469,45 @@ void Desk::remove_deskapp(Deskapp *d_app) // remove from "Delete link" right but
     desk_apps.removeOne(d_app);
     qDebug() << "Deskapp remove. Num. after deletion:" << desk_apps.size();
     d_app->close();
+}
+
+void Desk::add_deskicon(Frame *frm)
+{
+    if (! desk_icons.contains(frm->winId())) // if not already present
+    {
+        d_icon = new Deskicon(frm);
+        desk_icons.insert(frm->winId(), d_icon); // save the Frame winId/Dockicon
+        d_icon->move(frm->cl_x(), frm->cl_y());
+        qDebug() << "Deskicon added to Desktop. Frame:" << frm->winId();
+        connect(d_icon, SIGNAL(destroy_deskicon(Deskicon *)), this, SLOT(remove_deskicon(Deskicon *))); // delete deskicon
+    }
+}
+
+void Desk::remove_deskicon(Frame *frm)
+{
+    if (desk_icons.contains(frm->winId())) // remove Deskicon if present
+    {
+        Deskicon *d_icon = desk_icons.value(frm->winId());
+        remove_deskicon(d_icon);
+    }
+}
+
+void Desk::remove_deskicon(Deskicon *d_icon) // remove from "Close" right button mouse on Desktop
+{
+    desk_icons.remove(desk_icons.key(d_icon));
+    qDebug() << "Deskicon remove. Num. after deletion:" << desk_icons.size();
+    d_icon->close();
+}
+ 
+void Desk::remove_deskicon(Window win_id) //remove from "Close" cmd on Systray (_NET_SYSTEM_TRAY protocol) if Dockicon is still mapped
+{
+    if (desk_icons.contains(win_id))
+    {
+        Deskicon *d_icon = desk_icons.value(win_id);
+        desk_icons.remove(win_id);
+        qDebug() << "Deskicon remove from Systray cmd. Num. after deletion:" << desk_icons.size();
+        d_icon->close();
+    }
 }
 
 void Desk::update_style()

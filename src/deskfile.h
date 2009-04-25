@@ -47,8 +47,6 @@ public slots:
     void del_file();
 
 private:
-    QMenu *main_menu;
-    QMenu *open_menu;
     QString file_name;
     QString file_path;
     QString delete_link_pix;
@@ -56,11 +54,12 @@ private:
     QPoint mousepos;
     QColor d_file_col;
     QPixmap d_file_pix;
-    QSettings *style;
-    QSettings *antico;
-    QAction *delete_file;
     bool zoom;
     bool selected;
+    QMenu *main_menu;
+    QMenu *open_menu;
+    QSettings *antico;
+    QAction *delete_file;
     Categorymenu *cat_menu;
 };
 

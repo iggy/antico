@@ -15,8 +15,10 @@
 #include "defs.h"
 #include "border.h"
 #include "header.h"
+#include "desk.h"
 #include "dockbar.h"
 
+class Desk;
 class Dockbar;
 class Header;
 
@@ -27,7 +29,7 @@ class Frame : public QFrame
     Q_OBJECT
 
 public:
-    Frame(Window, const QString &, Dockbar *, QWidget *parent=0);
+    Frame(Window, const QString &, Dockbar *, Desk *, QWidget *parent=0);
     ~Frame();
     void init();
     void update_style();
@@ -91,11 +93,33 @@ public:
     {
         return splash;
     }
- 
+
+public slots:
+    void press_top_mid(QMouseEvent *);          // top mid border press
+    void move_top_mid(QMouseEvent *);           // top mid border move
+    void scroll_top_mid(QWheelEvent *);		// top mid scroll wheel
+    void press_bottom_left(QMouseEvent *);      // bottom left border press
+    void move_bottom_left(QMouseEvent *);       // bottom left border move
+    void press_bottom_right(QMouseEvent *);     // bottom right border press
+    void move_bottom_right(QMouseEvent *);      // bottom right border move
+    void press_bottom_mid(QMouseEvent *);       // bottom mid border press
+    void move_bottom_mid(QMouseEvent *);        // bottom mid border move
+    void press_right(QMouseEvent *);            // right border press
+    void move_right(QMouseEvent *);             // right border move
+    void press_left(QMouseEvent *);             // left border press
+    void move_left(QMouseEvent *);              // left border move
+    void destroy();                             // destroy client
+    void maximize();                            // maximize client
+    void shade();				// shade client window
+    void unshade();				// unshade client window
+    void iconify();                             // iconify client
+    void dragEnterEvent(QDragEnterEvent *);
+    void dragMoveEvent(QDragMoveEvent *);
+    void dropEvent(QDropEvent *);
+    
 private:
-    QDesktopWidget *desk;       // root window
+   
     WId c_win;                  // client window
-    Dockbar *dock;              // dockbar
     QString frame_type;         // frame type (Normal, Splash, Dialog, Desktop..)
     QString app_icon;           // default header icon used if no icon is find
     QPoint mousepos;            // mouse position at button press
@@ -123,6 +147,8 @@ private:
     QColor title_color;         // frame title color
     int diff_border_h;          // height space between parent frame (qt) and client frame
     int diff_border_w;          // width space between parent frame (qt) and client frame
+    int dock_height;            // dockbar height
+    int dock_position;          // dockbar position (top, bottom)
     bool maximized;             // maximize window
     bool splash;                // splash window
     bool shaped;                // nonrectangular window
@@ -132,13 +158,13 @@ private:
     bool prot_delete;           // client has delete WM protocol
     bool prot_take_focus;       // client has take focus WM protocol
     QPixmap wicon;              // window icon
-    int dock_height;            // dockbar height
-    int dock_position;          // dockbar position (top, bottom)
     QString wm_name;            // WM_NAME property or res_name
     QString res_name;           // ClassHint
     QString res_class;          // ClassHint
     bool inputfield;            // WMHints
     Colormap cmap;              // colormap
+    Desk *desktop;              // desktop
+    Dockbar *dockbar;           // dockbar
     Header *tm_bdr;             // top mid window border (for window move)
     Border *tl_bdr;             // top left window border (icon)
     Border *tr_bdr;             // top right window border (icon)
@@ -149,31 +175,6 @@ private:
     Border *r_bdr;              // right window border
     Border *c_bdr;              // center window border (client apps)
     QGridLayout *layout;
-    QSettings *style;
     QSettings *antico;
-
-public slots:
-    void press_top_mid(QMouseEvent *);          // top mid border press
-    void move_top_mid(QMouseEvent *);           // top mid border move
-    void scroll_top_mid(QWheelEvent*);		// top mid scroll wheel
-    void press_bottom_left(QMouseEvent *);      // bottom left border press
-    void move_bottom_left(QMouseEvent *);       // bottom left border move
-    void press_bottom_right(QMouseEvent *);     // bottom right border press
-    void move_bottom_right(QMouseEvent *);      // bottom right border move
-    void press_bottom_mid(QMouseEvent *);       // bottom mid border press
-    void move_bottom_mid(QMouseEvent *);        // bottom mid border move
-    void press_right(QMouseEvent *);            // right border press
-    void move_right(QMouseEvent *);             // right border move
-    void press_left(QMouseEvent *);             // left border press
-    void move_left(QMouseEvent *);              // left border move
-    void destroy();                             // destroy client
-    void maximize();                            // maximize client
-    void shade();				// shade client window
-    void unshade();				// unshade client window
-    void iconify();                             // iconify client
-    void dragEnterEvent(QDragEnterEvent *);
-    void dragMoveEvent(QDragMoveEvent *);
-    void dropEvent(QDropEvent *);
-
 };
 #endif

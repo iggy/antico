@@ -31,7 +31,7 @@ wall_pix=wallpaper.png
 [Dockbar]
 dock_pix=dockbar.png
 dock_height=40
-dock_width=1000
+dock_width=1280
 dock_position=0
 
 [Dockicon]
@@ -88,3 +88,6 @@ paste_file_pix=paste_file.png
 close_dock_pix=close_dock.png
 add_to_sys_pix=add_to_sys.png
 open_with_pix=open_with.png
+list_view_pix=list_view.png
+icon_view_pix=icon_view.png
+upper_dir_pix=upper_dir.png

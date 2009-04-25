@@ -8,9 +8,10 @@
 
 ////////////////////////////////////////
 
-Frame::Frame(Window w, const QString &type, Dockbar *dkbr, QWidget *parent) : QFrame(parent)
+Frame::Frame(Window w, const QString &type, Dockbar *dock, Desk *desk, QWidget *parent) : QFrame(parent)
 {
-    dock = dkbr;
+    dockbar = dock;
+    desktop = desk;
     frame_type = type;
     c_win = w;
     read_settings();
@@ -18,21 +19,11 @@ Frame::Frame(Window w, const QString &type, Dockbar *dkbr, QWidget *parent) : QF
     setFrameStyle(QFrame::Panel|QFrame::Raised);
     setAttribute(Qt::WA_AlwaysShowToolTips);
     setAcceptDrops(true);
+    set_active(); // set header active
 }
 
 Frame::~Frame()
 {
-    delete desk;
-    delete &title_color;
-    delete &lateral_bdr_width;
-    delete &top_bdr_height;
-    delete &bottom_bdr_height;
-    delete &header_active_pix;
-    delete &header_inactive_pix;
-    delete &minmax_pix;
-    delete &close_pix;
-    delete tr_bdr;
-    delete tl_bdr;
 }
 
 void Frame::read_settings()
@@ -44,7 +35,7 @@ void Frame::read_settings()
     QString stl_path = antico->value("path").toString();
     antico->endGroup(); //Style
     // get style values
-    style = new QSettings(stl_path + stl_name, QSettings::IniFormat, this);
+    QSettings *style = new QSettings(stl_path + stl_name, QSettings::IniFormat, this);
     ////// Frame //////
     style->beginGroup("Frame");
     style->beginGroup("Border");
@@ -73,7 +64,6 @@ void Frame::read_settings()
 
 void Frame::init()
 {
-    desk = QApplication::desktop();
     maximized = false;
     state = "NormalState";
     shaped = false;
@@ -112,7 +102,7 @@ void Frame::init()
     XSetWindowBorderWidth(QX11Info::display(), c_win, 0);  //client
     XSetWindowBorderWidth(QX11Info::display(), winId(), 0);  //frame
 
-    // ***THE MOST IMPORTANT FUNCTION*** // reparent client with frame
+     // ***THE MOST IMPORTANT FUNCTION*** // reparent client with frame
     XReparentWindow(QX11Info::display(), c_win, winId(), lateral_bdr_width, top_bdr_height);
     qDebug() << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++";
     qDebug() << "Reparent Client:" << c_win << "with Frame:" << winId() << "- Name:" << cl_name();
@@ -121,16 +111,16 @@ void Frame::init()
     XAddToSaveSet(QX11Info::display(), c_win);
     // move and resize client
     XMoveResizeWindow(QX11Info::display(), c_win, lateral_bdr_width, top_bdr_height+3, client_w, client_h);
-
-    //if the frame is too large, maximize
-    if (frame_w >= desk->width()-10 || frame_h >= desk->height()-20)
+    
+    //if the frame is too large, maximize it
+    if (frame_w >= QApplication::desktop()->width()-20 || frame_h >= QApplication::desktop()->height()-40)
     {
         maximize();
     }
     else // normal size
     {
         // move the frame in desktop center and resize
-        move((desk->width()/2)-(frame_w/2), (desk->height()/2)-(frame_h/2));
+        move((QApplication::desktop()->width()/2)-(frame_w/2), (QApplication::desktop()->height()/2)-(frame_h/2));
         resize(frame_w, frame_h);
     }
     qDebug() << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++";
@@ -180,12 +170,6 @@ void Frame::get_client_geometry()
     client_y = attr.y;
     client_w = attr.width;
     client_h = attr.height;
-
-    if (client_w >= desk->width()-10)
-        client_w = desk->width()-10;
-
-    if (client_h >= desk->height()-dock_height-20)
-        client_h = desk->height()-dock_height-20;
 
     qDebug() << "Client_x:" << client_x << "Client_y:" << client_y << "Client_w:" << client_w << "Client_h:" << client_h;
 }
@@ -271,14 +255,8 @@ void Frame::get_wm_normal_hints() // Poor implementation of many applications ..
                 client_h = xsizehints->base_height;
             qDebug() << "PBaseSize:" << client_w << client_h;
         }
-        if (client_w >= desk->width()-10)
-            client_w = desk->width()-10;
-
-        if (client_h >= desk->height()-dock_height-20)
-            client_h = desk->height()-dock_height-20;
-
+  
         qDebug() << "Final Client Size:" << client_w << client_h;
-
     }
 }
 
@@ -295,7 +273,7 @@ void Frame::set_state(int state)
 void Frame::set_focus(long timestamp) // set to focus to child
 {
     XSetInputFocus(QX11Info::display(), c_win, RevertToNone, CurrentTime);
-
+    raise();
     Atom wm_take_focus = XInternAtom(QX11Info::display(), "WM_TAKE_FOCUS", False);
     if (prot_take_focus) // WM_TAKE_FOCUS protocol
         send_wm_protocols(wm_take_focus, timestamp);
@@ -303,36 +281,34 @@ void Frame::set_focus(long timestamp) // set to focus to child
 
 void Frame::unmap()
 {
-    XUnmapWindow(QX11Info::display(), winId());
-    XUnmapWindow(QX11Info::display(), c_win);
-    qDebug() << "Frame unmapped:" << winId() << "Name:" << wm_name << "Client:" << c_win << "State:" << state;
-
-    if (frame_type != "Dialog")
-        dock->unmap(this);  // unmap Dockicon on Dockbar
+    XUnmapWindow(QX11Info::display(), winId()); // only the frame, the client is already unmapped...
+    state = "WithdrawnState";
+    qDebug() << "Frame unmapped (unmap):" << winId() << "Name:" << wm_name << "Client:" << c_win << "State:" << state;
 }
 
 void Frame::withdraw()
 {
-    XUnmapWindow(QX11Info::display(), winId());
-    XUnmapWindow(QX11Info::display(), c_win);
-    set_state(WithdrawnState);
-    state = "WithdrawnState";
-    qDebug() << "Frame unmapped:" << winId() << "Name:" << wm_name << "Client:" << c_win << "State:" << state;
-
     if (frame_type != "Dialog")
-        dock->remove(this);  // remove Dockicon from Dockbar
+    {
+        dockbar->remove_dockicon(this); // remove Dockicon from Dockbar
+        desktop->remove_deskicon(this);  // remove Application icon from Desktop
+    }
+    XUnmapWindow(QX11Info::display(), winId()); // only the frame, the client is already unmapped...
+    state = "WithdrawnState";
+    qDebug() << "Frame unmapped (withdraw):" << winId() << "Name:" << wm_name << "Client:" << c_win << "State:" << state;
 }
 
 void Frame::iconify()
 {
     if (frame_type != "Dialog") // no iconify on Dialog frames
     {
+        desktop->add_deskicon(this);  // add Application icon on Desktop
         XUnmapWindow(QX11Info::display(), winId());
         XUnmapWindow(QX11Info::display(), c_win);
         set_state(IconicState);
         state = "IconicState";
         qDebug() << "Frame iconify:" << winId() << "Name:" << wm_name << "Client:" << c_win << "State:" << state;
-        dock->unmap(this);  // unmap Dockicon on Dockbar
+        dockbar->remove_dockicon(this);  // remove Dockicon from Dockbar
     }
 }
 
@@ -343,19 +319,20 @@ void Frame::map()
     set_state(NormalState);
     state = "NormalState";
     qDebug() << "Frame mapped:" << winId() << "Name:" << wm_name << "Client:" << c_win << "State:" << state;
-    dock->map(this);  // map Dockicon on Dockbar
 }
 
 void Frame::raise()
 {
+    if (frame_type != "Dialog")
+    {
+        dockbar->add_dockicon(this);  // add frame to Dockbar
+        desktop->remove_deskicon(this);  // remove Application icon from Desktop
+    }
     XMapRaised(QX11Info::display(), winId());
     XMapRaised(QX11Info::display(), c_win);
     set_state(NormalState);
     state = "NormalState";
     qDebug() << "Frame raised:" << winId() << "Name:" << wm_name << "Client:" << c_win << "State:" << state;
-
-    if (frame_type != "Dialog")
-        dock->add(this);  // add frame to Dockbar
 }
 
 bool Frame::query_shape()
@@ -438,7 +415,7 @@ void Frame::get_wm_name()  // get WM_NAME
 void Frame::update_name()
 {
     tm_bdr->update_name(wm_name); // update header name
-    dock->update_dockicon_name(wm_name, this); // update Dockicon name
+    dockbar->update_dockicon_name(wm_name, this); // update Dockicon name
 }
 
 void Frame::get_wm_protocols()
@@ -813,12 +790,12 @@ void Frame::maximize()
         n_pw = width();
         n_ph = height();
         // maximize parent with vertex and screen dimension-dockbar height
-        m_pw = desk->width();
-        m_ph = desk->height()-dock_height;
+        m_pw = QApplication::desktop()->width();
+        m_ph = QApplication::desktop()->height()-dock_height;
         if (dock_position == 0) // bottom
-            move(desk->x(), desk->y());
+            move(QApplication::desktop()->x(), QApplication::desktop()->y());
         else // top
-            move(desk->x(), desk->y()+dock_height);
+            move(QApplication::desktop()->x(), QApplication::desktop()->y()+dock_height);
         resize(m_pw, m_ph);
         raise();
         // maximize client
@@ -891,4 +868,5 @@ void Frame::dropEvent(QDropEvent *event)
     event->accept();
     qDebug() << "Drop event contents:" << event->mimeData()->text().toLatin1().data();
 }
+
 

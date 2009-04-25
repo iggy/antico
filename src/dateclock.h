@@ -34,11 +34,9 @@ protected:
 private:
     QTime time;
     QDate date;
-    QTimer *timer;
-    QSettings *style;
     QColor date_col;
     QColor clock_col;
-
+    QTimer *timer;
 };
 
 #endif

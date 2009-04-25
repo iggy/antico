@@ -42,14 +42,12 @@ signals:
     void destroy_sys(Sysicon *);
 
 private:
-    Frame *frm;
     QString s_icon_pix;
     QString close_dock_pix;
     QPixmap pix;
-    QSettings *style;
     QColor title_color;
     int bdr_width;
-
+    Frame *frm;
 };
 
 #endif

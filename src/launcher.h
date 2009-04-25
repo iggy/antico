@@ -35,24 +35,15 @@ public:
 
 public slots:
     void run_command(QAction *);
-
+    
+signals:
+ 
 protected:
     void mousePressEvent(QMouseEvent *);
     void enterEvent(QEvent *);
     void leaveEvent(QEvent *);
 
 private:
-
-    QAction *quit;
-    QAction *shutdown;
-    QAction *restart;
-    QAction *refresh;
-    QAction *run;
-    QAction *show_desk;
-    QAction *manag;
-    QSettings *style;
-    QSettings *antico;
-    QMenu *main_menu;
     QString launcher_pix;
     QString quit_pix;
     QString shutdown_pix;
@@ -64,6 +55,15 @@ private:
     int dock_position;
     int dock_height;
     Antico *app;
+    QAction *quit;
+    QAction *shutdown;
+    QAction *restart;
+    QAction *refresh;
+    QAction *run;
+    QAction *show_desk;
+    QAction *manag;
+    QSettings *antico;
+    QMenu *main_menu;
 };
 
 #endif

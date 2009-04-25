@@ -47,20 +47,13 @@ public:
     void parse_desktop_file();
     QList <QMenu *> get_menus();
     void set_cmd_arguments(const QString &);
+    void clear_cmd_arguments();
 
 public slots:
     void run_menu(QAction *);
 
 private:
-    QSettings *style;
-    QSettings *antico;
-    QMenu *audiovideo_menu;
-    QMenu *system_menu;
-    QMenu *development_menu;
-    QMenu *graphics_menu;
-    QMenu *network_menu;
-    QMenu *office_menu;
-    QMenu *utility_menu;
+    QHash<QString, QMenu *> cat_menu;
     QString launch_pix;
     QString app_pix;
     QString quit_pix;
@@ -76,7 +69,14 @@ private:
     QString audiovideo_pix;
     QStringList cmd_arguments;
     QString data_path;
-    QHash<QString, QMenu *> cat_menu;
+    QSettings *antico;
+    QMenu *audiovideo_menu;
+    QMenu *system_menu;
+    QMenu *development_menu;
+    QMenu *graphics_menu;
+    QMenu *network_menu;
+    QMenu *office_menu;
+    QMenu *utility_menu;
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -96,8 +96,7 @@ public:
     void read_settings();
 
 private:
-    QSettings *style;
-    QSettings *antico;
+    QMap <QString, QStringList> cat_map; // (key = category pix path) (value = category file suffix list)
     QString utility_pix;
     QString office_pix;
     QString network_pix;
@@ -107,7 +106,6 @@ private:
     QString audiovideo_pix;
     QString d_folder_pix;
     QString application_pix;
-
     QStringList graphics;
     QStringList devel;
     QStringList system;
@@ -115,8 +113,6 @@ private:
     QStringList audiovideo;
     QStringList network;
     QStringList utility;
-    QMap <QString, QStringList> cat_map; // (key = category pix path) (value = category file suffix list)
-
 };
 
 

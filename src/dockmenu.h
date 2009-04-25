@@ -1,34 +1,29 @@
 ////////////////////////////////////////
-// File : dockicon.h                  //
+// File : dockmenu.h                  //
 // Written by: g_cigala@virgilio.it   //
 // Copyright : GPL                    //
 ////////////////////////////////////////
  
-// app iconify added on dockbar
+// category menu on dockbar
  
 ////////////////////////////////////////
  
-#ifndef DOCKICON_H
-#define DOCKICON_H
- 
-#include "frame.h"
-#include "systray.h"
- 
-class Frame;
-class Systray;
- 
+#ifndef DOCKMENU_H
+#define DOCKMENU_H
+
+#include "defs.h"
+
 ////////////////////////////////////////
  
-class Dockicon : public QWidget
+class Dockmenu : public QWidget
 {
     Q_OBJECT
  
 public:
-    Dockicon(Frame *, Systray *, QWidget *parent=0);
-    ~Dockicon();
+    Dockmenu(QMenu *menu, QWidget *parent=0);
+    ~Dockmenu();
     void read_settings();
     void update_style();
-    void update_name(const QString &);
 
 protected:
     void mousePressEvent(QMouseEvent *);
@@ -37,21 +32,18 @@ protected:
     void paintEvent(QPaintEvent *);
  
 public slots:
-    void run_menu(QAction *);
- 
+
 signals:
-    void destroy_dockicon(Dockicon *);
  
 private:
+    QString d_menu_pix;
     QColor title_color;
-    QString title;
-    QString close_dock_pix;
-    QString add_to_sys_pix;
-    QPixmap pix;
+    QPixmap back_pix;
+    QPixmap cat_pix;
     int bdr_width;
-    int frame_state;
-    Frame *frm;
-    Systray *sys;
+    int dock_position;
+    bool zoom;
+    QMenu *cat_menu;
 };
  
 #endif
