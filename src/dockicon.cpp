@@ -62,22 +62,10 @@ void Dockicon::paintEvent(QPaintEvent *)
 
 void Dockicon::mousePressEvent(QMouseEvent *event)
 {
-    if (event->button() == Qt::LeftButton)
+    if (event->button() == Qt::LeftButton && frame_state == 1)
     {
-        if (frame_state == 0)
-        {
-            frame_state = 1;
-            frm->raise();
-            qDebug() << "Dockicon (mouse press):" << frm->cl_win() << "- Name:" << frm->cl_name() << "- State: raised";
-            return;
-        }
-        if (frame_state == 1)
-        {
-            frame_state = 0;
-            frm->unmap();
-            qDebug() << "Dockicon (mouse press):" << frm->cl_win() << "- Name:" << frm->cl_name() << "- State: unmapped";
-            return;
-        }
+        frm->raise();
+        qDebug() << "Dockicon (mouse press):" << frm->cl_win() << "- Name:" << frm->cl_name();
     }
     if (event->button() == Qt::RightButton)
     {
@@ -89,10 +77,32 @@ void Dockicon::mousePressEvent(QMouseEvent *event)
     }
 }
 
+void Dockicon::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton)
+    {
+        if (frame_state == 0)
+        {
+            frame_state = 1;
+            frm->raise();
+            qDebug() << "Dockicon (double click):" << frm->cl_win() << "- Name:" << frm->cl_name() << "- State: raised";
+            return;
+        }
+        if (frame_state == 1)
+        {
+            frame_state = 0;
+            frm->unmap();
+            qDebug() << "Dockicon (double click):" << frm->cl_win() << "- Name:" << frm->cl_name() << "- State: unmapped";
+            return;
+        }
+    }
+}
+
 void Dockicon::enterEvent(QEvent *event)
 {
     Q_UNUSED(event);
     bdr_width = 2;
+    setToolTip(title); // update the tooltip
     update();
 }
 

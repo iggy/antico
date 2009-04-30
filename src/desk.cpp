@@ -318,7 +318,7 @@ void Desk::run_menu(QAction *act)
 {
     if (act->text().compare(tr("New link to folder")) == 0)
     {
-        file_dialog->set_type(tr("New link to folder:"), "OK_Cancel");
+        file_dialog->set_type(tr("New link to folder:"), "OK_Close");
 
         if (file_dialog->exec() == QDialog::Accepted)
         {
@@ -336,7 +336,7 @@ void Desk::run_menu(QAction *act)
     }
     if (act->text().compare(tr("New link to file")) == 0)
     {
-        file_dialog->set_type(tr("New link to file:"), "OK_Cancel");
+        file_dialog->set_type(tr("New link to file:"), "OK_Close");
 
         if (file_dialog->exec() == QDialog::Accepted)
         {
@@ -354,7 +354,7 @@ void Desk::run_menu(QAction *act)
     }
     if (act->text().compare(tr("New link to application")) == 0)
     {
-        file_dialog->set_type(tr("New link to application:"), "OK_Cancel");
+        file_dialog->set_type(tr("New link to application:"), "OK_Close");
 
         if (file_dialog->exec() == QDialog::Accepted)
         {
@@ -477,7 +477,7 @@ void Desk::add_deskicon(Frame *frm)
     {
         d_icon = new Deskicon(frm);
         desk_icons.insert(frm->winId(), d_icon); // save the Frame winId/Dockicon
-        d_icon->move(frm->cl_x(), frm->cl_y());
+        d_icon->move(frm->x() + frm->width()/2 - d_icon->width()/2, frm->y() + frm->height()/2 - d_icon->height()/2); // center in "big" app
         qDebug() << "Deskicon added to Desktop. Frame:" << frm->winId();
         connect(d_icon, SIGNAL(destroy_deskicon(Deskicon *)), this, SLOT(remove_deskicon(Deskicon *))); // delete deskicon
     }

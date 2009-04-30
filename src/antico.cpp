@@ -104,6 +104,7 @@ void Antico::get_atoms()
     _net_wm_window_type_desktop = XInternAtom(QX11Info::display(), "_NET_WM_WINDOW_TYPE_DESKTOP", False);
     _net_wm_window_type_dialog = XInternAtom(QX11Info::display(), "_NET_WM_WINDOW_TYPE_DIALOG", False);
     _net_wm_window_type_splash = XInternAtom(QX11Info::display(), "_NET_WM_WINDOW_TYPE_SPLASH", False);
+    _net_wm_window_type_dnd = XInternAtom(QX11Info::display(), "_NET_WM_WINDOW_TYPE_DND", False);
     _kde_net_wm_system_tray_window_for = XInternAtom(QX11Info::display(), "_KDE_NET_WM_SYSTEM_TRAY_WINDOW_FOR", False);
 }
 
@@ -172,6 +173,7 @@ void Antico::send_supported_hints()
     xev5.format = 32;
     xev5.data.l[0] = _kde_net_wm_system_tray_window_for;
     xev5.data.l[1] = _net_wm_state;
+    xev5.data.l[2] = _net_wm_window_type_dnd;
     XSendEvent(QX11Info::display(), QApplication::desktop()->winId(), False,
                (SubstructureNotifyMask | SubstructureRedirectMask), (XEvent *)&xev5);
 }
@@ -338,13 +340,16 @@ bool Antico::x11EventFilter(XEvent *event)
             mapping_clients.remove(event->xdestroywindow.window);
             mapping_frames.remove(frm->winId());
             dsk->remove_deskicon(frm->winId()); // remove eventually Deskicon still mapped
-            dock->remove_dockicon(frm); // remove eventually Dockicon or Sysicon still mapped
+            dock->remove_dockicon(frm); // remove eventually Dockicon still mapped
             delete frm;
             return true;
         }
         if (event->xdestroywindow.event != event->xdestroywindow.window)
+        {
+            dock->system_tray()->remove_sysicon(event->xdestroywindow.window); // check in the System Tray eventually Sysicon still mapped
+            dock->system_tray()->remove_embedder(event->xdestroywindow.window); // remove eventually QX11EmbedContainer
             return true;
-
+        }
         return false;
         break;
 
@@ -386,6 +391,10 @@ bool Antico::x11EventFilter(XEvent *event)
             mapping_clients.remove(event->xreparent.window);
             return true;
         }
+        else
+        {
+            qDebug() << "ReparentNotify for client:" << event->xreparent.window << "- new Parent:" << event->xreparent.parent;
+        }
         return false;
         break;
 
@@ -402,36 +411,44 @@ bool Antico::x11EventFilter(XEvent *event)
             {
                 qDebug() << "---> wm_hints";
                 frm->get_wm_hints();
+                return true;
             }
             if (pev->atom == wm_normal_hints)
             {
                 qDebug() << "---> wm_normal_hints";
                 frm->get_wm_normal_hints();
+                return true;
             }
             if (pev->atom == wm_name || pev->atom == _net_wm_name)
             {
                 qDebug() << "---> wm_name";
                 frm->get_wm_name();
                 frm->update_name();
+                return true;
             }
             if (pev->atom == wm_state || pev->atom == _net_wm_state)
             {
                 qDebug() << "---> wm_state";
                 qDebug() << "Window changing state:" << pev->window;
+                return true;
             }
             if (pev->atom == wm_colormaps)
             {
                 qDebug() << "---> wm_colormap_windows";
                 frm->get_colormaps();
+                return true;
             }
             if (pev->atom == wm_transient_for)
             {
                 qDebug() << "---> wm_transient_for";
+                return true;
             }
             if (pev->atom == _net_wm_user_time)
             {
                 qDebug() << "---> _net_wm_user_time";
                 frm->set_focus(CurrentTime);
+                set_active_frame(frm);
+                return true;
             }
             return true;
         }
@@ -473,6 +490,7 @@ bool Antico::x11EventFilter(XEvent *event)
         {
             qDebug() << "Button press:" <<  event->xbutton.button << "for map frame:" << event->xbutton.window;
             set_active_frame(frm);
+            XSetInputFocus(QX11Info::display(), event->xbutton.window, RevertToNone, CurrentTime);
         }
         else
         {
@@ -507,41 +525,49 @@ bool Antico::x11EventFilter(XEvent *event)
         {
             qDebug() << "Press [Alt+Tab] - Scroll active apps";
             raise_next_frame();
+            return false;
         }
         if (sym == XK_F2 && mod == keymask1)
         {
             qDebug() << "Press [Alt+F2] - Start Runner";
             new Runner();
+            return false;
         }
         if (sym == XK_q && mod == keymask1)
         {
             qDebug() << "Press [Alt+q] - Quit the WM";
             wm_quit();
+            return false;
         }
         if (sym == XK_s && mod == keymask1)
         {
             qDebug() << "Press [Alt+s] - Shutdown the PC";
             wm_shutdown();
+            return false;
         }
         if (sym == XK_r && mod == keymask1)
         {
             qDebug() << "Press [Alt+r] - Restart the PC";
             wm_restart();
+            return false;
         }
         if (sym == XK_u && mod == keymask1)
         {
             qDebug() << "Press [Alt+u] - Refresh the WM";
             wm_refresh();
+            return false;
         }
         if (sym == XK_m && mod == keymask1)
         {
             qDebug() << "Press [Alt+m] - Start Manager";
             new Manager();
+            return false;
         }
         if (sym == XK_d && mod == keymask1)
         {
             qDebug() << "Press [Alt+d] - Show Desktop";
             show_desktop();
+            return false;
         }
         return false;
         break;
@@ -638,20 +664,25 @@ void Antico::check_window_type(Window c_win) // chech the window type before map
                 frame_type << "Normal";
                 qDebug() << "Window type: NORMAL TYPE";
             }
-            if (win_type[i] == _net_wm_window_type_dialog)
+            else if (win_type[i] == _net_wm_window_type_dialog)
             {
                 frame_type << "Dialog";
                 qDebug() << "Window type: DIALOG TYPE";
             }
-            if (win_type[i] == _net_wm_window_type_splash)
+            else if (win_type[i] == _net_wm_window_type_splash)
             {
                 frame_type << "Splash";
                 qDebug() << "Window type: SPLASH TYPE";
             }
-            if (win_type[i] == _net_wm_window_type_desktop)
+            else if (win_type[i] == _net_wm_window_type_desktop)
             {
                 frame_type << "Desktop";
                 qDebug() << "Window type: DESKTOP TYPE";
+            }
+            else // if other window type
+            {
+                frame_type << "Normal";
+                qDebug() << "Other Window type. Set as NORMAL TYPE";
             }
         }
         return;
@@ -786,16 +817,16 @@ void Antico::wm_quit()
     {
         foreach(Frame *frm, mapping_clients)
         {
-            qDebug() << "Quit process:" << frm->cl_win();
+            qDebug() << "Quit Frame:" << frm->winId() << "Client:" << frm->cl_win();
             frm->destroy();
         }
         mapping_clients.clear();
         mapping_frames.clear();
         dock->close();
         dsk->close();
-        XSync(QX11Info::display(), False);
+      //  XSync(QX11Info::display(), False);
         qDebug() << "Quit Antico WM ...";
-        XCloseDisplay(QX11Info::display());
+   //     XCloseDisplay(QX11Info::display());
         emit lastWindowClosed();
     }
 }
@@ -818,7 +849,7 @@ void Antico::wm_shutdown()
 
         foreach(Frame *frm, mapping_clients)
         {
-            qDebug() << "Quit process:" << frm->cl_win();
+            qDebug() << "Quit Frame:" << frm->winId() << "Client:" << frm->cl_win();
             frm->destroy();
         }
         mapping_clients.clear();
@@ -851,7 +882,7 @@ void Antico::wm_restart()
 
         foreach(Frame *frm, mapping_clients)
         {
-            qDebug() << "Quit process:" << frm->cl_win();
+            qDebug() << "Quit Frame:" << frm->winId() << "Client:" << frm->cl_win();
             frm->destroy();
         }
         mapping_clients.clear();
@@ -871,13 +902,12 @@ void Antico::show_desktop()
 
     foreach(Frame *frm, mapping_clients)
     {
-        if ((frm->win_state().compare("IconicState") != 0 || frm->win_state().compare("WithdrawnState") != 0) && ! frm->is_splash()) // if not yet iconize/inactive
+        if (frm->win_state().compare("IconicState") != 0 && frm->win_state().compare("WithdrawnState") != 0 && !frm->is_splash()) // if not yet iconize/inactive
         {
             frm->raise(); // set in front
             frm->iconify(); // catch the pixmap
         }
     }
-
     XSync(QX11Info::display(), FALSE);
     flush();
 }
@@ -972,7 +1002,7 @@ void Antico::set_settings()
         style->beginGroup("Frame");
         style->beginGroup("Border");
         style->setValue("lateral_bdr_width", 3);
-        style->setValue("top_bdr_height", 16);
+        style->setValue("top_bdr_height", 18);
         style->setValue("bottom_bdr_height", 8);
         style->endGroup(); //Border
         style->beginGroup("Header");

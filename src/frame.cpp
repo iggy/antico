@@ -18,6 +18,7 @@ Frame::Frame(Window w, const QString &type, Dockbar *dock, Desk *desk, QWidget *
     init();
     setFrameStyle(QFrame::Panel|QFrame::Raised);
     setAttribute(Qt::WA_AlwaysShowToolTips);
+    setAttribute(Qt::WA_X11NetWmWindowTypeDND);
     setAcceptDrops(true);
     set_active(); // set header active
 }
@@ -302,7 +303,7 @@ void Frame::iconify()
 {
     if (frame_type != "Dialog") // no iconify on Dialog frames
     {
-        desktop->add_deskicon(this);  // add Application icon on Desktop
+        desktop->add_deskicon(this);  // add Application icon (small pixmap) on Desktop
         XUnmapWindow(QX11Info::display(), winId());
         XUnmapWindow(QX11Info::display(), c_win);
         set_state(IconicState);
@@ -849,6 +850,7 @@ void Frame::dragEnterEvent(QDragEnterEvent *event)
     qDebug() << "dragEnterEvent";
     qDebug() << "Proposed action:" << event->proposedAction() << " [1:Copy - 2:Move - 4:Link]";
     event->acceptProposedAction();
+    event->accept();
     qDebug() << "Drag enter contents:" << event->mimeData()->text().toLatin1().data();
 }
 
@@ -856,6 +858,7 @@ void Frame::dragMoveEvent(QDragMoveEvent *event)
 {
     qDebug() << "dragMoveEvent";
     qDebug() << "Proposed action:" << event->proposedAction() << " [1:Copy - 2:Move - 4:Link]";
+    event->acceptProposedAction();
     event->accept();
     qDebug() << "Drag move contents:" << event->mimeData()->text().toLatin1().data();
 }
